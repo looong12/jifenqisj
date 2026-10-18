@@ -2,40 +2,59 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=5.0, viewport‑fit=cover">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#07080c">
 <title>乒乓球记分器</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:"SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+html,body {
+    width:100%;
+    height:100%;
+    overflow:hidden;
+}
 body{
     background:
         radial-gradient(circle at 20% 10%, rgba(120,160,255,0.08), transparent 26%),
         radial-gradient(circle at 80% 90%, rgba(255,215,120,0.05), transparent 28%),
         linear-gradient(180deg,#07080c 0%, #0c0e14 45%, #07080c 100%);
     color:#e8e8e8;
-    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    overflow:auto;
 }
-/* 整体容器顺时针旋转90度 */
-.wrap-rotate{
+/* 整体容器顺时针旋转90度，适配手机竖屏打开向右横屏 */
+.scale-wrap {
     width:100vh;
     height:100vw;
+    transform-origin:center center;
     transform: rotate(90deg);
-    transform-origin: center center;
     position:relative;
+    overflow:hidden;
+}
+.wrap-rotate{
+    width:100%;
+    height:100%;
+    position:relative;
+    padding:12px 16px;
 }
 .container{
     width:100%;
-    padding:0 14px;
+    height:100%;
+    padding:0;
+}
+.head-line{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    margin:4px 0 12px;
 }
 #timer{
-    font-size:clamp(17px,3.6vw,26px);
+    font-size:clamp(16px,2vw,22px);
     font-weight:500;
     letter-spacing:1px;
-    text-align:center;
-    margin:6px 0 12px;
     color:#cfd6e4;
 }
 #timer::before{
@@ -47,50 +66,58 @@ body{
     background:#7aa2ff;
     vertical-align:middle;
     margin-right:8px;
-    box-shadow:0 0 12px rgba(122,162,255,0.9);
+    box-shadow:0 0 10px rgba(122,162,255,0.9);
+}
+#setInfo{
+    font-size:clamp(16px,2vw,22px);
+    font-weight:500;
+    letter-spacing:1px;
+    color:#cfd6e4;
 }
 .score-box{
     display:flex;
-    gap:min(2vw,14px);
+    gap:clamp(8px,1.5vw,14px);
     width:100%;
     align-items:stretch;
+}
+@media (max-width:850px){
+    .score-box{
+        flex-direction:column;
+    }
 }
 .team{
     flex:1;
     background:
         linear-gradient(180deg, #1c2030 0%, #141722 100%);
     border:1px solid rgba(255,255,255,0.08);
-    border-radius:20px;
+    border-radius:18px;
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:18px 14px;
+    padding:clamp(10px,1.6vw,16px) clamp(10px,1.4vw,14px);
     box-shadow:
-        0 30px 60px rgba(0,0,0,0.45),
+        0 20px 40px rgba(0,0,0,0.45),
         inset 0 1px 0 rgba(255,255,255,0.06);
 }
-/* 修复左右边距不一致：两端对齐 */
 .name-row{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:center;
     width:100%;
-    margin-bottom:10px;
+    position:relative;
+    margin-bottom:0px;
+    padding:0px 0 10px 0;
 }
 .name-row .ball{
-    order:1;
-}
-.name-row .name-input{
-    order:2;
+    position:absolute;
+    left:0;
 }
 .name-row.right-ball .ball{
-    order:2;
-}
-.name-row.right-ball .name-input{
-    order:1;
+    left:auto;
+    right:0;
 }
 .name-input{
-    font-size:clamp(18px,4vw,26px);
+    font-size:clamp(20px,3vw,42px);
     font-weight:600;
     text-align:center;
     background:transparent;
@@ -98,7 +125,8 @@ body{
     outline:none;
     color:#f5f5f7;
     padding:4px;
-    width:auto;
+    width:280px;
+    max-width:85%;
 }
 .name-red{
     background:linear-gradient(180deg,#ffd1d1 0%, #ff7474 100%);
@@ -112,17 +140,16 @@ body{
     background-clip:text;
     color:transparent;
 }
-/* 发球指示小球：保持强识别 */
 .ball {
-    width:clamp(22px,5vw,32px);
-    height:clamp(22px,5vw,32px);
+    width:clamp(22px,2.4vw,28px);
+    height:clamp(22px,2.4vw,28px);
     border-radius:50%;
     background:
         radial-gradient(circle at 30% 25%, #fff6c4, #ffd46b 45%, #d79a14 100%);
     border:2px solid rgba(255,255,255,0.9);
     box-shadow:
         0 0 0 1px rgba(0,0,0,0.55),
-        0 0 14px rgba(255,212,107,0.35);
+        0 0 10px rgba(255,212,107,0.35);
     opacity:0;
     transform:scale(0.55);
     transition:all 0.25s ease;
@@ -134,64 +161,71 @@ body{
     box-shadow:
         0 0 0 2px #000000,
         0 0 0 4px #ffd46b,
-        0 0 18px rgba(255,212,107,0.95),
-        0 0 34px rgba(255,170,0,0.55);
+        0 0 14px rgba(255,212,107,0.95),
+        0 0 24px rgba(255,170,0,0.55);
 }
 .game-count{
-    font-size:clamp(15px,2.8vw,19px);
+    font-size:clamp(18px,2.2vw,24px);
     font-weight:600;
-    letter-spacing:2px;
+    letter-spacing:1px;
     color:#b8892a;
-    margin-bottom:12px;
+    margin-bottom:10px;
 }
 .game-count span{
     color:#ffd46b;
     font-weight:700;
 }
-/* 比分盒子：冷灰蓝玻璃质感 */
 .score-wrap{
     display:flex;
     align-items:center;
     justify-content:space-between;
     width:100%;
-    padding:16px 14px;
-    min-height:clamp(150px,34vw,240px);
+    padding:clamp(12px,2vh,20px) clamp(12px,1.6vw,18px);
+    min-height:22vh;
+    max-height:44vh;
     background:
         linear-gradient(180deg, #242840 0%, #1a1d2c 100%);
     border:1px solid rgba(255,255,255,0.07);
-    border-radius:18px;
+    border-radius:16px;
     box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.05),
-        0 10px 30px rgba(0,0,0,0.35);
+        0 8px 20px rgba(0,0,0,0.35);
 }
-/* 比分数字：低饱和金属红蓝 */
+.score-holder{
+    flex:1;
+    min-width:80px;
+    max-width:200px;
+    container-type: inline-size;
+    text-align:center;
+    overflow:hidden;
+}
 .score{
-    font-size:clamp(140px,38vw,260px);
+    font-size:clamp(60px, 60cqi, 180px);
     font-weight:800;
     line-height:1;
-    letter-spacing:-4px;
-    font-variant-numeric:tabular-nums;
+    letter-spacing:-2px;
+    font-variant-numeric: tabular-nums;
+    display:inline-block;
 }
 .score-red{
     background:linear-gradient(180deg,#ffecec 0%, #ff8080 35%, #d14040 100%);
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
-    filter:drop-shadow(0 0 18px rgba(255,70,70,0.45));
+    filter:drop-shadow(0 0 16px rgba(255,70,70,0.45));
 }
 .score-blue{
     background:linear-gradient(180deg,#eaf2ff 0%, #8cb4ff 35%, #3f78e0 100%);
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
-    filter:drop-shadow(0 0 18px rgba(60,120,255,0.45));
+    filter:drop-shadow(0 0 16px rgba(60,120,255,0.45));
 }
 .btn-group{
     display:flex;
     flex-direction:column;
-    gap:14px;
+    gap:clamp(8px,1.6vw,12px);
 }
-/* 所有按钮统一点击动效 */
 button{
     transition:
         transform 0.12s ease,
@@ -210,11 +244,11 @@ button:active{
     filter:brightness(0.82) saturate(1.1);
 }
 .btn-group button{
-    width:clamp(48px,11vw,66px);
-    height:clamp(48px,11vw,66px);
-    font-size:clamp(22px,5vw,28px);
+    width:clamp(44px,6vw,60px);
+    height:clamp(44px,6vw,60px);
+    font-size:clamp(20px,2.6vw,26px);
     border:none;
-    border-radius:14px;
+    border-radius:12px;
     cursor:pointer;
     font-weight:700;
     color:#fff;
@@ -222,55 +256,47 @@ button:active{
         linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
     border:1px solid rgba(255,255,255,0.09);
     box-shadow:
-        0 10px 24px rgba(0,0,0,0.45),
+        0 8px 18px rgba(0,0,0,0.45),
         inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .btn-group button:active{
     box-shadow:
-        0 2px 8px rgba(0,0,0,0.55),
+        0 2px 6px rgba(0,0,0,0.55),
         inset 0 1px 2px rgba(0,0,0,0.35);
 }
-.add{
-    background:linear-gradient(180deg,#4aa3ff 0%, #254fa5 100%);
-}
-.sub{
-    background:linear-gradient(180deg,#ff845a 0%, #b23a1a 100%);
-}
 .ctrl{
-    margin-top:16px;
+    margin-top:14px;
     display:grid;
     grid-template-columns:repeat(5,1fr);
-    gap:min(1.5vw,8px);
+    gap:clamp(6px,1.2vw,10px);
 }
 .ctrl button{
-    padding:clamp(8px,1.4vw,10px) 4px;
-    font-size:clamp(12px,2vw,14px);
+    padding:clamp(8px,1.2vh,11px) 4px;
+    font-size:clamp(12px,1.6vw,16px);
     border:none;
-    border-radius:12px;
+    border-radius:10px;
     cursor:pointer;
     font-weight:600;
-    letter-spacing:1px;
+    letter-spacing:0.5px;
     color:#1a1a1a;
     background:linear-gradient(180deg,#ffe9a8 0%, #ffd24d 100%);
     box-shadow:
-        0 10px 24px rgba(255,180,0,0.25),
+        0 6px 14px rgba(255,180,0,0.25),
         inset 0 1px 0 rgba(255,255,255,0.4);
 }
 .ctrl button:active{
     box-shadow:
-        0 2px 8px rgba(255,180,0,0.35),
+        0 2px 6px rgba(255,180,0,0.35),
         inset 0 1px 2px rgba(0,0,0,0.25);
 }
 #switchServerBtn{
     background:linear-gradient(180deg,#c9a35a 0%, #7a5a1f 100%);
     color:#fff;
 }
-
-/* ==========自定义二次确认弹窗【放在rotate容器内，跟着一起旋转】========== */
 .confirm-mask{
     position:absolute;
     inset:0;
-    background:rgba(0,0,0,0.55);
+    background:rgba(0,0,0,0.65);
     backdrop-filter:blur(6px);
     -webkit-backdrop-filter:blur(6px);
     display:none;
@@ -282,28 +308,28 @@ button:active{
     display:flex;
 }
 .confirm-box{
-    width:min(420px, 86vw);
+    width:min(420px, 82vw);
     background:
         linear-gradient(180deg, #1c2030 0%, #141722 100%);
     border:1px solid rgba(255,255,255,0.08);
-    border-radius:20px;
-    padding:22px 20px 18px;
+    border-radius:18px;
+    padding:20px 18px 18px;
     box-shadow:
-        0 30px 60px rgba(0,0,0,0.55),
+        0 24px 48px rgba(0,0,0,0.55),
         inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .confirm-title{
-    font-size:clamp(15px,2.4vw,17px);
+    font-size:clamp(16px,1.8vw,18px);
     font-weight:700;
     color:#ffd46b;
     margin-bottom:10px;
-    letter-spacing:2px;
+    letter-spacing:1px;
 }
 .confirm-text{
-    font-size:clamp(14px,2.2vw,16px);
-    line-height:1.6;
+    font-size:clamp(14px,1.6vw,16px);
+    line-height:1.5;
     color:#e5e7ef;
-    margin-bottom:18px;
+    margin-bottom:16px;
 }
 .confirm-btns{
     display:flex;
@@ -312,12 +338,12 @@ button:active{
 }
 .confirm-btns button{
     padding:9px 18px;
-    font-size:clamp(13px,2vw,15px);
+    font-size:clamp(13px,1.4vw,15px);
     border:none;
     border-radius:12px;
     cursor:pointer;
     font-weight:600;
-    letter-spacing:1px;
+    letter-spacing:0.5px;
 }
 .confirm-cancel{
     background:linear-gradient(180deg,#2a2f42 0%, #1a1d2c 100%);
@@ -328,27 +354,43 @@ button:active{
     background:linear-gradient(180deg,#ffe9a8 0%, #ffd24d 100%);
     color:#1a1a1a;
     box-shadow:
-        0 10px 24px rgba(255,180,0,0.25),
+        0 6px 14px rgba(255,180,0,0.25),
         inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.btn-option-group{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+}
+.btn-option-group button{
+    flex:1;
+    min-width:70px;
+    padding:10px 6px;
 }
 </style>
 </head>
 <body>
-
-<div class="wrap-rotate">
+<div class="scale-wrap">
+<div class="wrap-rotate" id="wrapRotate">
     <div class="confirm-mask" id="confirmMask">
         <div class="confirm-box">
             <div class="confirm-title">提示</div>
             <div class="confirm-text" id="confirmText"></div>
-            <div class="confirm-btns">
+            <div class="btn-option-group" id="optionGroup" style="display:none;">
+                <!-- 局数选择选项会动态插入这里 -->
+            </div>
+            <div class="confirm-btns" id="confirmBtnWrap">
                 <button class="confirm-cancel" id="confirmCancelBtn">取消</button>
                 <button class="confirm-ok" id="confirmOkBtn">确定</button>
             </div>
         </div>
     </div>
-
     <div class="container">
-        <div id="timer">比赛时间：00:00</div>
+        <div class="head-line">
+            <div id="timer">比赛时间：00:00</div>
+            <div id="setInfo">赛制：不限局数</div>
+        </div>
         <div class="score-box">
             <div class="team">
                 <div class="name-row">
@@ -361,7 +403,9 @@ button:active{
                         <button class="add" onclick="addLeft()">+</button>
                         <button class="sub" onclick="subLeft()">−</button>
                     </div>
-                    <div class="score score-red" id="scoreLeft">0</div>
+                    <div class="score-holder">
+                        <div class="score score-red" id="scoreLeft">0</div>
+                    </div>
                     <div></div>
                 </div>
             </div>
@@ -373,7 +417,9 @@ button:active{
                 <span class="game-count">胜局：<span id="winRight">0</span></span>
                 <div class="score-wrap">
                     <div></div>
-                    <div class="score score-blue" id="scoreRight">0</div>
+                    <div class="score-holder">
+                        <div class="score score-blue" id="scoreRight">0</div>
+                    </div>
                     <div class="btn-group">
                         <button class="add" onclick="addRight()">+</button>
                         <button class="sub" onclick="subRight()">−</button>
@@ -385,12 +431,12 @@ button:active{
             <button onclick="resetGame()">重置本局</button>
             <button onclick="resetAll()">全部清零</button>
             <button id="switchServerBtn" onclick="manualSwitchServer()">切换发球</button>
-            <button onclick="startTimer()">开始计时</button>
-            <button onclick="stopTimer()">停止计时</button>
+            <button id="toggleTimerBtn" onclick="toggleTimer()">开始计时</button>
+            <button onclick="openSetSelect()">选择局数</button>
         </div>
     </div>
 </div>
-
+</div>
 <script>
 let leftScore = 0, rightScore = 0;
 let winLeft = 0, winRight = 0;
@@ -399,6 +445,8 @@ let serveCount = 0;
 let timerInterval = null;
 let seconds = 0;
 let gameOver = false;
+// 赛制配置：目标胜局；null=不限局数
+let targetWin = null; // 默认不限局数
 const nameLeft = document.getElementById('nameLeft');
 const nameRight = document.getElementById('nameRight');
 const scoreLeftDom = document.getElementById('scoreLeft');
@@ -406,45 +454,95 @@ const scoreRightDom = document.getElementById('scoreRight');
 const winLeftDom = document.getElementById('winLeft');
 const winRightDom = document.getElementById('winRight');
 const timerDom = document.getElementById('timer');
+const toggleTimerBtn = document.getElementById('toggleTimerBtn');
 const ballLeft = document.getElementById('ballLeft');
 const ballRight = document.getElementById('ballRight');
-
-// ==========自定义确认弹窗逻辑（修复冒泡bug）==========
+const wrapRotate = document.getElementById('wrapRotate');
 const confirmMask = document.getElementById('confirmMask');
 const confirmText = document.getElementById('confirmText');
 const confirmOkBtn = document.getElementById('confirmOkBtn');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+const optionGroup = document.getElementById('optionGroup');
+const confirmBtnWrap = document.getElementById('confirmBtnWrap');
+const setInfo = document.getElementById('setInfo');
+const scaleWrap = document.querySelector('.scale-wrap');
 let confirmCallback = null;
+
+// 旋转模式下不再做旧的autoScaleLayout缩放，移除尺寸缩放逻辑
+function autoScaleLayout(){
+}
+
+window.addEventListener('resize',autoScaleLayout);
+window.addEventListener('orientationchange',autoScaleLayout);
 
 function showConfirm(text, onOk){
     confirmText.innerText = text;
     confirmCallback = onOk;
     confirmMask.classList.add('show');
+    optionGroup.style.display = 'none';
+    confirmBtnWrap.style.display = 'flex';
 }
 function closeConfirm(){
     confirmMask.classList.remove('show');
     confirmCallback = null;
 }
-
-// 确定按钮
 confirmOkBtn.addEventListener('click',function(e){
     e.stopPropagation();
     const cb = confirmCallback;
     closeConfirm();
     if(cb) cb();
 });
-// 取消按钮
 confirmCancelBtn.addEventListener('click',function(e){
     e.stopPropagation();
     closeConfirm();
 });
-// 点击遮罩空白关闭
 confirmMask.addEventListener('click',function(e){
     if(e.target === confirmMask){
         closeConfirm();
     }
 });
-
+// 计时合并按钮：切换开始/暂停
+function toggleTimer(){
+    if(timerInterval){
+        //正在运行 → 停止
+        clearInterval(timerInterval);
+        timerInterval = null;
+        toggleTimerBtn.innerText = "继续计时";
+    }else{
+        //未运行 → 启动
+        timerInterval = setInterval(()=>{
+            seconds++;
+            const min = String(Math.floor(seconds/60)).padStart(2,'0');
+            const sec = String(seconds%60).padStart(2,'0');
+            timerDom.innerText=`比赛时间：${min}:${sec}`;
+        },1000);
+        toggleTimerBtn.innerText = "暂停计时";
+    }
+}
+// 打开选择局数弹窗
+function openSetSelect(){
+    confirmMask.classList.add('show');
+    confirmText.innerText = "请选择比赛赛制";
+    confirmBtnWrap.style.display = 'none';
+    optionGroup.style.display = 'flex';
+    optionGroup.innerHTML = "";
+    const sets = [
+        {name:"3局2胜", val:2},
+        {name:"5局3胜", val:3},
+        {name:"7局4胜", val:4},
+        {name:"不限局数", val:null}
+    ];
+    sets.forEach(s=>{
+        const btn = document.createElement('button');
+        btn.innerText = s.name;
+        btn.onclick = ()=>{
+            targetWin = s.val;
+            setInfo.innerText = `赛制：${s.name}`;
+            closeConfirm();
+        };
+        optionGroup.appendChild(btn);
+    })
+}
 function render(){
     scoreLeftDom.innerText = leftScore;
     scoreRightDom.innerText = rightScore;
@@ -454,6 +552,8 @@ function render(){
     updateServerTip();
 }
 function addLeft(){
+    // targetWin不为null（有限局数）才判断整场结束锁分；不限局不锁
+    if(targetWin !== null && (winLeft >= targetWin || winRight >= targetWin)) return;
     if(gameOver){
         leftScore=0;
         rightScore=0;
@@ -483,6 +583,7 @@ function subLeft(){
     render()
 }
 function addRight(){
+    if(targetWin !== null && (winLeft >= targetWin || winRight >= targetWin)) return;
     if(gameOver){
         leftScore=0;
         rightScore=0;
@@ -591,27 +692,21 @@ function resetAll(){
         seconds=0;
         serveCount=0;
         serverSide='left';
-        stopTimer();
+        stopTimerInner();
+        toggleTimerBtn.innerText = "开始计时";
         timerDom.innerText="比赛时间：00:00";
         ballLeft.classList.remove('active');
         ballRight.classList.remove('active');
         render();
     });
 }
-function startTimer(){
-    if(timerInterval) return;
-    timerInterval = setInterval(()=>{
-        seconds++;
-        const min = String(Math.floor(seconds/60)).padStart(2,'0');
-        const sec = String(seconds%60).padStart(2,'0');
-        timerDom.innerText=`比赛时间：${min}:${sec}`;
-    },1000);
-}
-function stopTimer(){
+//内部停止计时
+function stopTimerInner(){
     clearInterval(timerInterval);
     timerInterval=null;
 }
 render();
+autoScaleLayout();
 </script>
 </body>
 </html>
