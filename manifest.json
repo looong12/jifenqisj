@@ -14,35 +14,4 @@
       "purpose": "any maskable"
     }
   ]
-function checkOrientation(){
-    // 判断是否竖屏
-    const isPortrait = window.innerHeight > window.innerWidth;
-    const tipDom = document.getElementById('rotateTip');
-    if(isPortrait){
-        tipDom.style.display = 'block';
-    }else{
-        tipDom.style.display = 'none';
-    }
-}
-
-//绑定事件
-window.addEventListener('resize',()=>{
-    autoScaleLayout();
-    checkOrientation();
-});
-window.addEventListener('orientationchange',()=>{
-    setTimeout(()=>{
-        autoScaleLayout();
-        checkOrientation();
-    },100);
-});
-
-//初始化执行
-render();
-window.addEventListener('load',()=>{
-    autoScaleLayout();
-    checkOrientation();
-});
-autoScaleLayout();
-checkOrientation();
 }
